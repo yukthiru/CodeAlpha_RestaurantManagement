@@ -113,7 +113,3 @@ curl -X POST http://127.0.0.1:5000/api/orders \
   -H "Content-Type: application/json" \
   -d '{"table_id": 1, "items": [{"menu_item_id": 1, "quantity": 2}]}'
 ```
-
-## Author
-
-Built as part of the CodeAlpha Backend Development Internship — Task 3: Restaurant Management System.
