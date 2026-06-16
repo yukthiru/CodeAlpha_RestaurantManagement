@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant Management System</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+        min-height: 100vh;
+        padding: 30px 15px;
+    }
+    .wrapper { max-width: 1000px; margin: 0 auto; }
+    h1 {
+        text-align: center;
+        color: #fff;
+        margin-bottom: 6px;
+        font-size: 32px;
+        text-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .subtitle {
+        text-align: center;
+        color: #fff4ea;
+        margin-bottom: 24px;
+        font-size: 14px;
+    }
+    .tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        padding: 10px 18px;
+        border: none;
+        border-radius: 30px;
+        background: rgba(255,255,255,0.25);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 0.2s;
+    }
+    .tab-btn.active { background: #fff; color: #ff7e5f; }
+    .panel {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        padding: 28px;
+        display: none;
+    }
+    .panel.active { display: block; }
+    .panel h2 { color: #333; margin-bottom: 16px; font-size: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+    .form-row.single { grid-template-columns: 1fr; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
+    .form-group input, .form-group select {
+        width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0;
+        border-radius: 8px; font-size: 14px; outline: none; font-family: inherit;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: #ff7e5f; }
+    .btn {
+        padding: 11px 22px; background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+        color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+        cursor: pointer; transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn.small { padding: 7px 12px; font-size: 12px; }
+    .btn.danger { background: linear-gradient(135deg, #ff5858 0%, #f857a6 100%); }
+    .btn.secondary { background: #6c757d; }
+    .msg { margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: 13px; display: none; }
+    .msg.show { display: block; }
+    .msg.success { background: #e6f9f0; color: #11998e; }
+    .msg.error { background: #fdecea; color: #c0392b; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
+    th { color: #888; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+    .badge.available { background: #e6f9f0; color: #11998e; }
+    .badge.occupied { background: #fdecea; color: #c0392b; }
+    .badge.reserved { background: #fff4e0; color: #d68a00; }
+    .badge.pending { background: #fff4e0; color: #d68a00; }
+    .badge.preparing { background: #e7f0ff; color: #2575fc; }
+    .badge.served { background: #eef0ff; color: #6a11cb; }
+    .badge.paid { background: #e6f9f0; color: #11998e; }
+    .badge.cancelled { background: #f0f0f0; color: #999; }
+    .badge.active { background: #e6f9f0; color: #11998e; }
+    .badge.low { background: #fdecea; color: #c0392b; }
+    .badge.ok { background: #e6f9f0; color: #11998e; }
+
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 8px; }
+    .table-card {
+        border: 1px solid #eee; border-radius: 10px; padding: 12px; text-align: center;
+    }
+    .table-card .num { font-size: 18px; font-weight: 700; color: #333; }
+    .table-card .cap { font-size: 11px; color: #999; margin-bottom: 6px; }
+
+    .empty { text-align: center; color: #aaa; font-size: 14px; padding: 24px 0; }
+
+    .order-item-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .order-item-row select, .order-item-row input { padding: 8px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 13px; }
+    .order-item-row select { flex: 2; }
+    .order-item-row input { flex: 1; }
+
+    select.status-select {
+        padding: 5px 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 12px;
+    }
+    .stats-row { display: flex; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+    .stat-box {
+        flex: 1; min-width: 140px; background: #fff8f3; border-radius: 10px; padding: 14px; text-align: center;
+    }
+    .stat-box .val { font-size: 22px; font-weight: 700; color: #ff7e5f; }
+    .stat-box .lbl { font-size: 12px; color: #999; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+    <h1>🍽 Restaurant Management System</h1>
+    <p class="subtitle">Manage menu, tables, orders, reservations and inventory</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="menu">Menu</button>
+        <button class="tab-btn" data-tab="tables">Tables</button>
+        <button class="tab-btn" data-tab="orders">Orders</button>
+        <button class="tab-btn" data-tab="reservations">Reservations</button>
+        <button class="tab-btn" data-tab="inventory">Inventory</button>
+        <button class="tab-btn" data-tab="reports">Reports</button>
+    </div>
+
+    <!-- MENU -->
+    <div class="panel active" id="menu">
+        <h2>Add Menu Item</h2>
+        <form id="menuForm">
+            <div class="form-row three">
+                <div class="form-group"><label>Name</label><input type="text" id="miName" required></div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="miCategory" required>
+                        <option value="starter">Starter</option>
+                        <option value="main">Main</option>
+                        <option value="dessert">Dessert</option>
+                        <option value="drink">Drink</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Price (₹)</label><input type="number" id="miPrice" step="0.01" required></div>
+            </div>
+            <button type="submit" class="btn">Add Item</button>
+            <div class="msg" id="menuMsg"></div>
+        </form>
+        <h2 style="margin-top:20px;">Menu Items</h2>
+        <table>
+            <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="menuTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TABLES -->
+    <div class="panel" id="tables">
+        <h2>Add Table</h2>
+        <form id="tableForm">
+            <div class="form-row">
+                <div class="form-group"><label>Table Number</label><input type="number" id="tNumber" required></div>
+                <div class="form-group"><label>Capacity</label><input type="number" id="tCapacity" value="2" required></div>
+            </div>
+            <button type="submit" class="btn">Add Table</button>
+            <div class="msg" id="tableMsg"></div>
+        </form>
+        <h2 style="margin-top:20px;">Tables</h2>
+        <div class="card-grid" id="tablesGrid"></div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="panel" id="orders">
+        <h2>Place Order</h2>
+        <form id="orderForm">
+            <div class="form-row single">
+                <div class="form-group">
+                    <label>Table (optional - for takeaway leave blank)</label>
+                    <select id="orderTable"><option value="">-- Takeaway --</option></select>
+                </div>
+            </div>
+            <div id="orderItems"></div>
+            <button type="button" class="btn secondary small" id="addItemBtn">+ Add Item</button>
+            <br><br>
+            <button type="submit" class="btn">Place Order</button>
+            <div class="msg" id="orderMsg"></div>
+        </form>
+        <h2 style="margin-top:20px;">Orders</h2>
+        <table>
+            <thead><tr><th>ID</th><th>Table</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
+            <tbody id="ordersTable"></tbody>
+        </table>
+    </div>
+
+    <!-- RESERVATIONS -->
+    <div class="panel" id="reservations">
+        <h2>New Reservation</h2>
+        <form id="reservationForm">
+            <div class="form-row three">
+                <div class="form-group"><label>Table</label><select id="resTable" required></select></div>
+                <div class="form-group"><label>Customer Name</label><input type="text" id="resName" required></div>
+                <div class="form-group"><label>Party Size</label><input type="number" id="resSize" min="1" required></div>
+            </div>
+            <div class="form-row single">
+                <div class="form-group"><label>Time</label><input type="datetime-local" id="resTime" required></div>
+            </div>
+            <button type="submit" class="btn">Reserve</button>
+            <div class="msg" id="resMsg"></div>
+        </form>
+        <h2 style="margin-top:20px;">Reservations</h2>
+        <table>
+            <thead><tr><th>Table</th><th>Customer</th><th>Party Size</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="reservationsTable"></tbody>
+        </table>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="panel" id="inventory">
+        <h2>Add Inventory Item</h2>
+        <form id="inventoryForm">
+            <div class="form-row three">
+                <div class="form-group"><label>Item Name</label><input type="text" id="invName" required></div>
+                <div class="form-group"><label>Quantity</label><input type="number" id="invQty" step="0.01" required></div>
+                <div class="form-group"><label>Unit</label><input type="text" id="invUnit" placeholder="kg, liters, units" required></div>
+            </div>
+            <div class="form-row single">
+                <div class="form-group"><label>Low Stock Threshold</label><input type="number" id="invThreshold" step="0.01" value="5"></div>
+            </div>
+            <button type="submit" class="btn">Add Item</button>
+            <div class="msg" id="invMsg"></div>
+        </form>
+        <h2 style="margin-top:20px;">Inventory</h2>
+        <table>
+            <thead><tr><th>Item</th><th>Quantity</th><th>Status</th><th>Update Stock</th></tr></thead>
+            <tbody id="inventoryTable"></tbody>
+        </table>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="panel" id="reports">
+        <h2>Reports</h2>
+        <div class="stats-row">
+            <div class="stat-box"><div class="val" id="totalOrders">0</div><div class="lbl">Paid Orders</div></div>
+            <div class="stat-box"><div class="val" id="totalSales">₹0</div><div class="lbl">Total Sales</div></div>
+            <div class="stat-box"><div class="val" id="lowStockCount">0</div><div class="lbl">Low Stock Items</div></div>
+        </div>
+        <h2>Low Stock Alerts</h2>
+        <table>
+            <thead><tr><th>Item</th><th>Quantity</th><th>Threshold</th></tr></thead>
+            <tbody id="lowStockTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab-btn');
+const panels = document.querySelectorAll('.panel');
+let menuItemsCache = [];
+
+tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+        loadAll();
+    });
+});
+
+// ---------- MENU ----------
+async function loadMenu() {
+    const res = await fetch('/api/menu');
+    const items = await res.json();
+    menuItemsCache = items;
+    const tbody = document.getElementById('menuTable');
+    tbody.innerHTML = '';
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty">No menu items yet.</td></tr>';
+    }
+    items.forEach(i => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i.name}</td>
+            <td>${i.category}</td>
+            <td>₹${i.price.toFixed(2)}</td>
+            <td><span class="badge ${i.available ? 'available' : 'occupied'}">${i.available ? 'Available' : 'Unavailable'}</span></td>
+            <td>
+                <button class="btn small secondary" onclick="toggleMenu(${i.id})">Toggle</button>
+                <button class="btn small danger" onclick="deleteMenuItem(${i.id})">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    populateOrderMenuSelects();
+}
+
+document.getElementById('menuForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+        name: document.getElementById('miName').value,
+        category: document.getElementById('miCategory').value,
+        price: document.getElementById('miPrice').value
+    };
+    const res = await fetch('/api/menu', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    showMsg('menuMsg', res.ok, res.ok ? 'Menu item added!' : data.error);
+    if (res.ok) { document.getElementById('menuForm').reset(); loadMenu(); }
+});
+
+async function toggleMenu(id) {
+    await fetch(`/api/menu/${id}/toggle`, { method: 'POST' });
+    loadMenu();
+}
+
+async function deleteMenuItem(id) {
+    if (!confirm('Delete this menu item?')) return;
+    await fetch(`/api/menu/${id}`, { method: 'DELETE' });
+    loadMenu();
+}
+
+// ---------- TABLES ----------
+async function loadTables() {
+    const res = await fetch('/api/tables');
+    const tables = await res.json();
+    const grid = document.getElementById('tablesGrid');
+    grid.innerHTML = '';
+    if (tables.length === 0) {
+        grid.innerHTML = '<div class="empty">No tables yet.</div>';
+    }
+    tables.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'table-card';
+        card.innerHTML = `
+            <div class="num">#${t.number}</div>
+            <div class="cap">Seats ${t.capacity}</div>
+            <span class="badge ${t.status}">${t.status}</span>
+        `;
+        grid.appendChild(card);
+    });
+    populateTableSelects(tables);
+}
+
+document.getElementById('tableForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = { number: document.getElementById('tNumber').value, capacity: document.getElementById('tCapacity').value };
+    const res = await fetch('/api/tables', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    showMsg('tableMsg', res.ok, res.ok ? 'Table added!' : data.error);
+    if (res.ok) { document.getElementById('tableForm').reset(); document.getElementById('tCapacity').value = 2; loadAll(); }
+});
+
+function populateTableSelects(tables) {
+    const orderSel = document.getElementById('orderTable');
+    const resSel = document.getElementById('resTable');
+    orderSel.innerHTML = '<option value="">-- Takeaway --</option>';
+    resSel.innerHTML = '';
+    tables.forEach(t => {
+        orderSel.innerHTML += `<option value="${t.id}">Table ${t.number} (seats ${t.capacity})</option>`;
+        if (t.status === 'available') {
+            resSel.innerHTML += `<option value="${t.id}">Table ${t.number} (seats ${t.capacity})</option>`;
+        }
+    });
+    if (!resSel.innerHTML) resSel.innerHTML = '<option value="">No available tables</option>';
+}
+
+// ---------- ORDERS ----------
+function addOrderItemRow() {
+    const div = document.createElement('div');
+    div.className = 'order-item-row';
+    const options = menuItemsCache.filter(m => m.available).map(m => `<option value="${m.id}">${m.name} (₹${m.price.toFixed(2)})</option>`).join('');
+    div.innerHTML = `
+        <select class="oi-menu">${options || '<option value="">No items available</option>'}</select>
+        <input type="number" class="oi-qty" value="1" min="1">
+        <button type="button" class="btn small danger" onclick="this.parentElement.remove()">✕</button>
+    `;
+    document.getElementById('orderItems').appendChild(div);
+}
+document.getElementById('addItemBtn').addEventListener('click', addOrderItemRow);
+
+function populateOrderMenuSelects() {
+    document.querySelectorAll('.oi-menu').forEach(sel => {
+        const current = sel.value;
+        const options = menuItemsCache.filter(m => m.available).map(m => `<option value="${m.id}">${m.name} (₹${m.price.toFixed(2)})</option>`).join('');
+        sel.innerHTML = options || '<option value="">No items available</option>';
+        if (current) sel.value = current;
+    });
+}
+
+document.getElementById('orderForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const tableId = document.getElementById('orderTable').value || null;
+    const rows = document.querySelectorAll('#orderItems .order-item-row');
+    const items = [];
+    rows.forEach(r => {
+        const menuItemId = r.querySelector('.oi-menu').value;
+        const qty = r.querySelector('.oi-qty').value;
+        if (menuItemId) items.push({ menu_item_id: parseInt(menuItemId), quantity: parseInt(qty) });
+    });
+
+    if (items.length === 0) {
+        showMsg('orderMsg', false, 'Add at least one item to the order');
+        return;
+    }
+
+    const res = await fetch('/api/orders', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ table_id: tableId, items }) });
+    const data = await res.json();
+    showMsg('orderMsg', res.ok, res.ok ? 'Order placed!' : data.error);
+    if (res.ok) {
+        document.getElementById('orderItems').innerHTML = '';
+        loadAll();
+    }
+});
+
+async function loadOrders() {
+    const res = await fetch('/api/orders');
+    const orders = await res.json();
+    const tbody = document.getElementById('ordersTable');
+    tbody.innerHTML = '';
+    if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty">No orders yet.</td></tr>';
+    }
+    const statuses = ['pending', 'preparing', 'served', 'paid', 'cancelled'];
+    orders.forEach(o => {
+        const itemsText = o.items.map(i => `${i.name} x${i.quantity}`).join(', ');
+        const options = statuses.map(s => `<option value="${s}" ${s===o.status?'selected':''}>${s}</option>`).join('');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>#${o.id}</td>
+            <td>${o.table_number ? 'Table ' + o.table_number : 'Takeaway'}</td>
+            <td>${itemsText}</td>
+            <td>₹${o.total.toFixed(2)}</td>
+            <td>
+                <select class="status-select" onchange="updateOrderStatus(${o.id}, this.value)">${options}</select>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function updateOrderStatus(orderId, status) {
+    await fetch(`/api/orders/${orderId}/status`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status }) });
+    loadAll();
+}
+
+// ---------- RESERVATIONS ----------
+document.getElementById('reservationForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+        table_id: document.getElementById('resTable').value,
+        customer_name: document.getElementById('resName').value,
+        party_size: document.getElementById('resSize').value,
+        reservation_time: document.getElementById('resTime').value
+    };
+    const res = await fetch('/api/reservations', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    showMsg('resMsg', res.ok, res.ok ? 'Reservation created!' : data.error);
+    if (res.ok) { document.getElementById('reservationForm').reset(); loadAll(); }
+});
+
+async function loadReservations() {
+    const res = await fetch('/api/reservations');
+    const reservations = await res.json();
+    const tbody = document.getElementById('reservationsTable');
+    tbody.innerHTML = '';
+    if (reservations.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">No reservations yet.</td></tr>';
+    }
+    reservations.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>Table ${r.table_number}</td>
+            <td>${r.customer_name}</td>
+            <td>${r.party_size}</td>
+            <td>${new Date(r.reservation_time).toLocaleString()}</td>
+            <td><span class="badge ${r.status}">${r.status}</span></td>
+            <td>${r.status === 'active' ? `<button class="btn small danger" onclick="cancelReservation(${r.id})">Cancel</button>` : ''}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function cancelReservation(id) {
+    await fetch(`/api/reservations/${id}/cancel`, { method: 'POST' });
+    loadAll();
+}
+
+// ---------- INVENTORY ----------
+document.getElementById('inventoryForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+        name: document.getElementById('invName').value,
+        quantity: document.getElementById('invQty').value,
+        unit: document.getElementById('invUnit').value,
+        low_stock_threshold: document.getElementById('invThreshold').value
+    };
+    const res = await fetch('/api/inventory', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    showMsg('invMsg', res.ok, res.ok ? 'Inventory item added!' : data.error);
+    if (res.ok) { document.getElementById('inventoryForm').reset(); document.getElementById('invThreshold').value = 5; loadAll(); }
+});
+
+async function loadInventory() {
+    const res = await fetch('/api/inventory');
+    const items = await res.json();
+    const tbody = document.getElementById('inventoryTable');
+    tbody.innerHTML = '';
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty">No inventory items yet.</td></tr>';
+    }
+    items.forEach(i => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i.name}</td>
+            <td>${i.quantity} ${i.unit}</td>
+            <td><span class="badge ${i.low_stock ? 'low' : 'ok'}">${i.low_stock ? 'Low Stock' : 'OK'}</span></td>
+            <td>
+                <button class="btn small secondary" onclick="adjustInventory(${i.id}, 1)">+1</button>
+                <button class="btn small danger" onclick="adjustInventory(${i.id}, -1)">-1</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function adjustInventory(id, delta) {
+    await fetch(`/api/inventory/${id}/update`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ delta }) });
+    loadAll();
+}
+
+// ---------- REPORTS ----------
+async function loadReports() {
+    const salesRes = await fetch('/api/reports/sales');
+    const sales = await salesRes.json();
+    document.getElementById('totalOrders').textContent = sales.total_orders;
+    document.getElementById('totalSales').textContent = '₹' + sales.total_sales.toFixed(2);
+
+    const lowRes = await fetch('/api/reports/low-stock');
+    const low = await lowRes.json();
+    document.getElementById('lowStockCount').textContent = low.length;
+    const tbody = document.getElementById('lowStockTable');
+    tbody.innerHTML = '';
+    if (low.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty">All stock levels are healthy.</td></tr>';
+    }
+    low.forEach(i => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${i.name}</td><td>${i.quantity} ${i.unit}</td><td>${i.low_stock_threshold} ${i.unit}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+// ---------- Helpers ----------
+function showMsg(id, success, text) {
+    const box = document.getElementById(id);
+    box.textContent = text;
+    box.classList.remove('success', 'error');
+    box.classList.add('show', success ? 'success' : 'error');
+    setTimeout(() => box.classList.remove('show'), 4000);
+}
+
+async function loadAll() {
+    await loadMenu();
+    await loadTables();
+    await loadOrders();
+    await loadReservations();
+    await loadInventory();
+    await loadReports();
+}
+
+loadAll();
+</script>
+</body>
+</html>

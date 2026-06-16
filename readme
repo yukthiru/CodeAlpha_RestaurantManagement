@@ -1,0 +1,119 @@
+# CodeAlpha_RestaurantManagement
+
+A Restaurant Management System backend built with Flask and SQLite, as part of the CodeAlpha Backend Development Internship (Task 3).
+
+## Features
+
+- **Menu Management**: add menu items with category and price, toggle availability, delete items
+- **Table Management**: add tables with seating capacity, track status (available / occupied / reserved)
+- **Reservations**: book a table for a customer, with capacity and availability checks; cancel reservations (auto-frees the table)
+- **Orders**: place orders (dine-in or takeaway), automatically marks table as occupied, calculates totals, update order status through its lifecycle (pending → preparing → served → paid / cancelled)
+- **Inventory**: track stock items with units and low-stock thresholds, adjust stock up/down
+- **Reports**: total sales from paid orders, low-stock alerts
+
+## Tech Stack
+
+- **Backend:** Flask (Python)
+- **Database:** SQLite (via Flask-SQLAlchemy)
+- **Frontend:** HTML, CSS, JavaScript (tabbed single-page interface)
+
+## Project Structure
+
+```
+CodeAlpha_RestaurantManagement/
+├── app.py
+├── requirements.txt
+├── templates/
+│   └── index.html
+└── README.md
+```
+
+## Setup & Run
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/<your-username>/CodeAlpha_RestaurantManagement.git
+   cd CodeAlpha_RestaurantManagement
+   ```
+
+2. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate   # On Windows: venv\Scripts\activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Run the app:
+   ```bash
+   python app.py
+   ```
+
+5. Open your browser at `http://127.0.0.1:5000/`
+
+## Database Models
+
+- **MenuItem**: `id`, `name`, `category`, `price`, `available`
+- **Table**: `id`, `number`, `capacity`, `status` (`available`/`occupied`/`reserved`)
+- **Reservation**: `id`, `table_id` (FK), `customer_name`, `party_size`, `reservation_time`, `status` (`active`/`cancelled`)
+- **Order**: `id`, `table_id` (FK, nullable for takeaway), `status` (`pending`/`preparing`/`served`/`paid`/`cancelled`), `created_at`
+- **OrderItem**: `id`, `order_id` (FK), `menu_item_id` (FK), `quantity`
+- **InventoryItem**: `id`, `name`, `quantity`, `unit`, `low_stock_threshold`
+
+## API Endpoints
+
+### Menu
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/menu` | List all menu items |
+| POST | `/api/menu` | Add a menu item |
+| POST | `/api/menu/<id>/toggle` | Toggle availability |
+| DELETE | `/api/menu/<id>` | Delete a menu item |
+
+### Tables
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/tables` | List all tables |
+| POST | `/api/tables` | Add a table |
+
+### Reservations
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/reservations` | List all reservations |
+| POST | `/api/reservations` | Create a reservation |
+| POST | `/api/reservations/<id>/cancel` | Cancel a reservation |
+
+### Orders
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/orders` | List all orders (optional `?status=` filter) |
+| POST | `/api/orders` | Place a new order |
+| POST | `/api/orders/<id>/status` | Update order status |
+
+### Inventory
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/inventory` | List inventory items |
+| POST | `/api/inventory` | Add an inventory item |
+| POST | `/api/inventory/<id>/update` | Adjust stock (`delta` can be positive or negative) |
+
+### Reports
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/reports/sales` | Total paid orders and revenue |
+| GET | `/api/reports/low-stock` | Items below their low-stock threshold |
+
+## Example: Place an Order
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"table_id": 1, "items": [{"menu_item_id": 1, "quantity": 2}]}'
+```
+
+## Author
+
+Built as part of the CodeAlpha Backend Development Internship — Task 3: Restaurant Management System.
